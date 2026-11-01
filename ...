@@ -1,0 +1,553 @@
+local p_Gui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+local m_UI = p_Gui:WaitForChild("MainUI")
+local init = m_UI:WaitForChild("Initiator")
+local G_Mod = require(init:WaitForChild("Main_Game"))
+
+G_Mod.caption("made by the jabiss don't share the script on any site, link, app or server", true)
+
+-- NEW FOG & LIGHTING CONFIGURATION TASK
+task.spawn(function()
+    local Lighting = game:GetService("Lighting")
+
+    Lighting.FogColor = Color3.fromRGB(25, 20, 45)
+    Lighting.FogStart = 0
+    Lighting.FogEnd = 60
+    Lighting.ClockTime = 0
+    Lighting.Brightness = 0.5
+    Lighting.GlobalShadows = true
+    Lighting.ExposureCompensation = -0.5
+    Lighting.Ambient = Color3.fromRGB(15, 12, 25)
+    Lighting.OutdoorAmbient = Color3.fromRGB(5, 5, 10)
+
+    for _, object in pairs(workspace:GetDescendants()) do
+        if object:IsA("BasePart") and (object.Name == "LightPart" or object.Name == "Lamp") then
+            local pointLight = Instance.new("PointLight")
+            pointLight.Color = Color3.fromRGB(255, 190, 110)
+            pointLight.Brightness = 1.8
+            pointLight.Range = 14
+            pointLight.Shadows = true
+            pointLight.Parent = object
+
+            object.Material = Enum.Material.Neon
+            object.Transparency = 0.2
+        end
+    end
+
+    local colorCorrection = Lighting:FindFirstChild("GameColor")
+    if not colorCorrection then
+        colorCorrection = Instance.new("ColorCorrectionEffect")
+        colorCorrection.Name = "GameColor"
+        colorCorrection.Parent = Lighting
+    end
+
+    colorCorrection.Contrast = 0.1
+    colorCorrection.Saturation = -0.05
+end)
+
+-- CUSTOM SPAWN BACKGROUND AMBIENT TRACK
+task.spawn(function()
+    local cue2 = Instance.new("Sound")
+    cue2.Parent = workspace
+    cue2.Name = "Spawn"
+    cue2.SoundId = "rbxassetid://9113731836"
+    cue2.Volume = 1
+    cue2.PlaybackSpeed = 1
+    cue2.Looped = true
+    cue2:Play()
+end)
+
+task.spawn(function()
+    task.wait(1)
+    pcall(function()
+        -- Define the local player's PlayerGui folder
+        local Players = game:GetService("Players")
+        local localPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
+        local p_Gui = localPlayer:WaitForChild("PlayerGui")
+
+        local TS = game:GetService("TweenService")
+        local scr = Instance.new("ScreenGui")
+        scr.Name = "FragmentedInfoUI"
+        scr.ResetOnSpawn = false
+        scr.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        scr.Parent = p_Gui
+
+        local btn = Instance.new("ImageButton")
+        btn.Name = "InfoButton"
+        -- Made the button smaller (60x60 pixels instead of 85x85)
+        btn.Size = UDim2.new(0, 60, 0, 60)
+        -- Positioned in the bottom left corner (20 pixels away from the left and bottom edges)
+        btn.Position = UDim2.new(0, 20, 1, -80)
+        btn.BackgroundTransparency = 1
+        btn.Image = "rbxassetid://119271927319588"
+        btn.Parent = scr
+
+        local frm = Instance.new("Frame")
+        frm.Name = "InfoMenu"
+        frm.Size = UDim2.new(0, 420, 0, 260)
+        
+        local pos_H = UDim2.new(0.5, -210, 1, 50)
+        local pos_V = UDim2.new(0.5, -210, 0.5, -130)
+        
+        frm.Position = pos_H
+        frm.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        frm.BorderSizePixel = 2
+        frm.BorderColor3 = Color3.fromRGB(135, 135, 135)
+        frm.Visible = false
+        frm.Parent = scr
+
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(1, -30, 1, -60)
+        lbl.Position = UDim2.new(0, 15, 0, 15)
+        lbl.BackgroundTransparency = 1
+        lbl.TextColor3 = Color3.fromRGB(240, 240, 240)
+        lbl.TextSize = 18
+        lbl.Font = Enum.Font.Oswald
+        lbl.TextWrapped = true
+        lbl.TextXAlignment = Enum.TextXAlignment.Center
+        lbl.TextYAlignment = Enum.TextYAlignment.Center
+        lbl.Text = "Welcome to doors fragmented mode! hope you have fun playing it! please don't share this script without permission. credits to the Jabiss, Noah, Junbbinopro, Nhankg and other people. l also fixed alot of problems that were in this script"
+        lbl.Parent = frm
+
+        local cls = Instance.new("TextButton")
+        cls.Name = "CloseButton"
+        cls.Size = UDim2.new(0, 130, 0, 35)
+        cls.Position = UDim2.new(0.5, -65, 1, -45)
+        cls.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+        cls.TextColor3 = Color3.fromRGB(255, 255, 255)
+        cls.TextSize = 16
+        cls.Font = Enum.Font.Oswald
+        cls.Text = "Close"
+        cls.Parent = frm
+
+        local isOpen = false
+        local t_Info = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+        local function toggle()
+            if not isOpen then
+                isOpen = true
+                frm.Visible = true
+                TS:Create(frm, t_Info, {Position = pos_V}):Play()
+            else
+                isOpen = false
+                local c_Tween = TS:Create(frm, t_Info, {Position = pos_H})
+                c_Tween:Play()
+                c_Tween.Completed:Connect(function()
+                    if not isOpen then frm.Visible = false end
+                end)
+            end
+        end
+
+        btn.MouseButton1Click:Connect(toggle)
+        cls.MouseButton1Click:Connect(toggle)
+    end)
+end)
+
+task.spawn(function()
+    pcall(function()
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        local s = m_UI:WaitForChild("MainFrame"):WaitForChild("IntroText")
+        local intro = s:Clone()
+        intro.Parent = m_UI
+        intro.Name = "Fragment Mode Intro"
+        intro.Visible = true
+        intro.Text = "The Fragments"
+        intro.TextTransparency = 0
+        
+        pcall(function()
+            local introSnd = Instance.new("Sound")
+            introSnd.Name = "FragmentedIntroAudio"
+            introSnd.Volume = 3
+            introSnd.Parent = workspace
+            
+            local rawAudioUrl = "https://raw.githubusercontent.com/thelostw3r/ScriptsForMyModes/main/FragmentedHotel.mp3"
+            
+            if writefile and getcustomasset then
+                if not isfile("FragmentedHotel.mp3") then
+                    writefile("FragmentedHotel.mp3", game:HttpGet(rawAudioUrl))
+                end
+                introSnd.SoundId = getcustomasset("FragmentedHotel.mp3")
+            else
+                introSnd.SoundId = rawAudioUrl
+            end
+            introSnd:Play()
+        end)
+
+        game.TweenService:Create(intro.Underline, TweenInfo.new(3), {Size = UDim2.new(1.1, 0, 0.015, 6)}):Play()
+        task.wait(7)
+        game.TweenService:Create(intro.Underline, TweenInfo.new(1.3), {Size = UDim2.new(0.95, 0, 0.015, 6)}):Play()
+        task.wait(1)
+        game.TweenService:Create(intro.Underline, TweenInfo.new(2), {ImageTransparency = 1}):Play()
+        game.TweenService:Create(intro, TweenInfo.new(2), {TextTransparency = 1}):Play()
+        game.TweenService:Create(intro.Underline, TweenInfo.new(7), {Size = UDim2.new(0, 0, 0.015, 6)}):Play()
+        task.wait(2.3)
+        intro.Visible = false
+        task.wait(1)
+        intro:Destroy()
+        G_Mod.caption("Fragmented mode is now active", true)
+        wait(2)
+        G_Mod.caption("made by the jabiss", true)
+        wait(2)
+        G_Mod.caption("fixed by noob_playzz", true)
+    end)
+end)
+
+task.spawn(function()
+    pcall(function()
+        task.delay(3, function() loadstring(game:HttpGet("https://raw.githubusercontent.com/firerygames055/doors-fragmented-mode-updated-sprint/refs/heads/main/fragmented%20mode%20updated%20sprint"))() end)
+    end)
+end)
+
+local amb_Snd = Instance.new("Sound")
+amb_Snd.SoundId = "rbxassetid://1843477119"
+amb_Snd.Volume = 1
+amb_Snd.Looped = true
+amb_Snd.Parent = workspace
+amb_Snd:Play()
+
+game.ReplicatedStorage.GameData.LatestRoom.Changed:Connect(function()
+    task.wait(0.1)
+    pcall(function()
+        local room = workspace.CurrentRooms:FindFirstChild(tostring(game.ReplicatedStorage.GameData.LatestRoom.Value))
+        if room and room:FindFirstChild("Door") and room.Door:FindFirstChild("Door") then
+            room.Door.Door.Open.SoundId = "rbxassetid://833871080"
+            room.Door.Door.Material = Enum.Material.Rock
+            if room.Door.Door:FindFirstChild("Sign") then
+                room.Door.Door.Sign.Material = Enum.Material.Rock
+            end
+        end
+    end)
+end)
+
+pcall(function()
+    local Ents = game.ReplicatedStorage:WaitForChild("Entities")
+    Ents.Screech.Top.Eyes.Color = Color3.fromRGB(255, 0, 0)
+    local Mods = init.Main_Game.RemoteListener.Modules
+    Mods.Screech.Caught.SoundId = "rbxassetid://17642270436"
+    Mods.Screech.Caught.PlaybackSpeed = 1
+    Mods.Screech.Attack.SoundId = "rbxassetid://75725601034313"
+    Mods.HideMonster.Scare.SoundId = "rbxassetid://9126213741"
+    Mods.SpiderJumpscare.Scare.SoundId = "rbxassetid://8080941676"
+end)
+
+local function s_Load(targetUrl)
+    local ok, output = pcall(function() return game:HttpGet(targetUrl) end)
+    if ok and output and not output:match("404") then
+        local run = loadstring(output)
+        if run then pcall(run) end
+    end
+end
+
+-- ENTITY ATTACK LOOPS
+
+task.spawn(function()
+    while true do
+        task.wait(650)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/firerygames055/doors-fragmented-mode-fixed/refs/heads/main/Blaze%20entity")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(500)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/eoyoustme/ohh/b4925f04895ca7d0ce90f9c72a08fb00325b9d6a/HUNGERED")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(350)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/brylesantos38-cell/Rebound-better/refs/heads/main/REBOUNDFIXEDSCRIPT")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(400)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/firerygames055/torment-better-version/refs/heads/main/torment")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(35)
+        s_Load("https://raw.githubusercontent.com/firerygames055/fragmented-mode-daze-fixed/refs/heads/main/daze%20fixed")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(330)
+        s_Load("https://raw.githubusercontent.com/eoyoustme/ohh/refs/heads/main/Draft1")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(220)
+        s_Load("https://raw.githubusercontent.com/firerygames055/fluster/refs/heads/main/fluster")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(450)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/eoyoustme/Script/refs/heads/main/Detph1")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(200)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/talales/Ngakh/refs/heads/main/perator")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(300)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/firerygames055/struggle-this-time-with-achievement/refs/heads/main/struggled")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(310)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/firerygames055/dread-fixed/refs/heads/main/dread%20dependency%201")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(120)
+        s_Load("https://raw.githubusercontent.com/firerygames055/muffler-fixed/refs/heads/main/muffler%20fixed")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(550)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/eoyoustme2/dm123/refs/heads/main/Fallacy")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(255)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/firerygames055/hallucinate-fixed-version/refs/heads/main/halluicnate")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(280)
+        s_Load("https://raw.githubusercontent.com/eoyoustme/back/refs/heads/main/SKIBIDIDOPDOP")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(190)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/firerygames055/disturbance/refs/heads/main/disturbance")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(390)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/firerygames055/doors-fragmented-mode-fixed/refs/heads/main/Hustle%20entity")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(470)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/firerygames055/doors-fragmented-mode-fixed/refs/heads/main/Daunt%20reignited")
+    end
+end)
+
+task.spawn(function()
+    while true do
+        task.wait(320)
+        game.ReplicatedStorage.GameData.LatestRoom.Changed:Wait()
+        s_Load("https://raw.githubusercontent.com/firerygames055/doors-fragmented-mode-fixed/refs/heads/main/Greed%20fragmented%20version")
+    end
+end)
+
+-- ADMIN COMMAND GUI HANDLER
+task.spawn(function()
+    local lp = game.Players.LocalPlayer
+    local TS = game:GetService("TweenService")
+    
+    local auth_list = {
+        ["Sonic_Shadowfx1234"] = true,
+        ["doorsgod766"] = true
+    }
+    
+    local cmd_map = {
+        {"Dread", "https://raw.githubusercontent.com/firerygames055/dread-fixed/refs/heads/main/dread%20dependency%201"},
+        {"Hunger", "https://raw.githubusercontent.com/eoyoustme/ohh/b4925f04895ca7d0ce90f9c72a08fb00325b9d6a/HUNGERED"},
+        {"Rebound", "https://raw.githubusercontent.com/brylesantos38-cell/Rebound-better/refs/heads/main/REBOUNDFIXEDSCRIPT"},
+        {"Torment", "https://raw.githubusercontent.com/firerygames055/torment-better-version/refs/heads/main/torment"},
+        {"Daze", "https://raw.githubusercontent.com/firerygames055/fragmented-mode-daze-fixed/refs/heads/main/daze%20fixed"},
+        {"Draft", "https://raw.githubusercontent.com/eoyoustme/ohh/refs/heads/main/Draft1"},
+        {"Fluster", "https://raw.githubusercontent.com/firerygames055/fluster/refs/heads/main/fluster"},
+        {"Depth", "https://raw.githubusercontent.com/eoyoustme/Script/refs/heads/main/Detph1"},
+        {"Perator", "https://raw.githubusercontent.com/talales/Ngakh/refs/heads/main/perator"},
+        {"Struggle", "https://raw.githubusercontent.com/firerygames055/struggle-this-time-with-achievement/refs/heads/main/struggled"},
+        {"Crouch", "https://raw.githubusercontent.com/firerygames055/muffler-fixed/refs/heads/main/muffler%20fixed"},
+        {"Fallacy", "https://raw.githubusercontent.com/eoyoustme2/dm123/refs/heads/main/Fallacy"},
+        {"Hallucinate", "https://raw.githubusercontent.com/firerygames055/hallucinate-fixed-version/refs/heads/main/halluicnate"},
+        {"Revoker", "https://raw.githubusercontent.com/eoyoustme/back/refs/heads/main/SKIBIDIDOPDOP"},
+        {"Disturbance", "https://raw.githubusercontent.com/firerygames055/disturbance/refs/heads/main/disturbance"},
+        {"Hustle", "https://raw.githubusercontent.com/firerygames055/doors-fragmented-mode-fixed/refs/heads/main/Hustle%20entity"},
+        {"Daunt", "https://raw.githubusercontent.com/firerygames055/doors-fragmented-mode-fixed/refs/heads/main/Daunt%20reignited"},
+        {"Greed", "https://raw.githubusercontent.com/firerygames055/doors-fragmented-mode-fixed/refs/heads/main/Greed%20fragmented%20version"},
+        {"Blaze", "https://raw.githubusercontent.com/firerygames055/doors-fragmented-mode-fixed/refs/heads/main/Blaze%20entity"}
+    }
+    local UserInputService = game:GetService("UserInputService")
+    -- Build GUI Layout
+    local scr = Instance.new("ScreenGui")
+    scr.Name = "FragmentedAdminUI"
+    scr.ResetOnSpawn = false
+    scr.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    scr.Parent = p_Gui
+
+    -- Admin Toggle Button (Left Side)
+    local toggleBtn = Instance.new("TextButton")
+    toggleBtn.Name = "AdminToggleButton"
+    toggleBtn.Size = UDim2.new(0, 50, 0, 85)
+    toggleBtn.Position = UDim2.new(0, 15, 0.5, -42)
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(30, 20, 20)
+    toggleBtn.BorderSizePixel = 2
+    toggleBtn.BorderColor3 = Color3.fromRGB(150, 50, 50)
+    toggleBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+    toggleBtn.TextSize = 14
+    toggleBtn.Font = Enum.Font.SourceSansBold
+    toggleBtn.Text = "A\nD\nM\nI\nN"
+    toggleBtn.Parent = scr
+
+    -- Main Panel Frame
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "AdminMenu"
+    mainFrame.Size = UDim2.new(0, 450, 0, 320)
+    
+    local pos_Hidden = UDim2.new(0.5, -225, 1, 50)
+    local pos_Visible = UDim2.new(0.5, -225, 0.5, -160)
+    
+    mainFrame.Position = pos_Hidden
+    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 15, 15)
+    mainFrame.BorderSizePixel = 2
+    mainFrame.BorderColor3 = Color3.fromRGB(180, 40, 40)
+    mainFrame.Visible = false
+    mainFrame.Parent = scr
+
+    -- Header Title
+    local titleLbl = Instance.new("TextLabel")
+    titleLbl.Size = UDim2.new(1, 0, 0, 40)
+    titleLbl.BackgroundTransparency = 1
+    titleLbl.TextColor3 = Color3.fromRGB(255, 60, 60)
+    titleLbl.TextSize = 20
+    titleLbl.Font = Enum.Font.SourceSansBold
+    titleLbl.Text = "FRAGMENTED ADMIN PANEL"
+    titleLbl.Parent = mainFrame
+
+    -- Scrolling Frame for Entity Buttons
+    local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Size = UDim2.new(1, -20, 1, -100)
+    scrollFrame.Position = UDim2.new(0, 10, 0, 45)
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 360)
+    scrollFrame.ScrollBarThickness = 6
+    scrollFrame.Parent = mainFrame
+
+    local grid = Instance.new("UIGridLayout")
+    grid.CellSize = UDim2.new(0, 130, 0, 40)
+    grid.CellPadding = UDim2.new(0, 10, 0, 10)
+    grid.Parent = scrollFrame
+
+    -- Close Button
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Name = "CloseButton"
+    closeBtn.Size = UDim2.new(0, 140, 0, 35)
+    closeBtn.Position = UDim2.new(0.5, -70, 1, -45)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(50, 25, 25)
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    closeBtn.TextSize = 16
+    closeBtn.Font = Enum.Font.SourceSansBold
+    closeBtn.Text = "Close"
+    closeBtn.Parent = mainFrame
+
+    -- Generate entity script buttons dynamically
+    for _, item in ipairs(cmd_map) do
+        local name = item[1]
+        local url = item[2]
+
+        local entBtn = Instance.new("TextButton")
+        entBtn.Name = name .. "Button"
+        entBtn.BackgroundColor3 = Color3.fromRGB(35, 30, 30)
+        entBtn.TextColor3 = Color3.fromRGB(240, 240, 240)
+        entBtn.TextSize = 14
+        entBtn.Font = Enum.Font.SourceSans
+        entBtn.Text = name
+        entBtn.Parent = scrollFrame
+
+        entBtn.MouseButton1Click:Connect(function()
+            if auth_list[lp.Name] then
+                G_Mod.caption("[Creator / Head admin]: Executing " .. name .. "!", true)
+                s_Load(url)
+            else
+                G_Mod.caption("Your not an admin!", true)
+            end
+        end)
+    end
+
+    -- Menu Slide Window Animation Controls
+    local isOpen = false
+    local t_Info = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
+    local function toggleMenu()
+        if not isOpen then
+            isOpen = true
+            mainFrame.Visible = true
+            TS:Create(mainFrame, t_Info, {Position = pos_Visible}):Play()
+        else
+            isOpen = false
+            local c_Tween = TS:Create(mainFrame, t_Info, {Position = pos_Hidden})
+            c_Tween:Play()
+            c_Tween.Completed:Connect(function()
+                if not isOpen then mainFrame.Visible = false end
+            end)
+        end
+    end
+
+    toggleBtn.MouseButton1Click:Connect(toggleMenu)
+    closeBtn.MouseButton1Click:Connect(toggleMenu)
+
+-- Toggle panel using the F key
+    UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+        if gameProcessedEvent then return end -- Ignores keypress if typing in chat
+        if input.KeyCode == Enum.KeyCode.F then
+            toggleMenu()
+        end
+    end)
+end)
+
+-- candle
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Junbbinopro/Guiding-light-candle/refs/heads/main/Candle"))()
+-- Agony at door 50
+loadstring(game:HttpGet("https://raw.githubusercontent.com/firerygames055/doors-fragmented-mode-agony/refs/heads/main/agony%20waiting%20mechanism"))()
+-- door 50 new music
+loadstring(game:HttpGet("https://raw.githubusercontent.com/firerygames055/doors-fragmented-mode-new-door-50-music/refs/heads/main/script"))()
